@@ -1,17 +1,20 @@
 from config import database, user, password, subd
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import create_tables, import_data, find_sales
+from models import create_tables, import_data, get_shops
 import json
 
 
-DNS = f'{subd}://{user}:{password}@localhost:5432/{database}'
-engine = create_engine(DNS)
-
-create_tables(engine)
-
 
 if __name__ == '__main__':
+
+    DNS = f'{subd}://{user}:{password}@localhost:5432/{database}'
+    engine = create_engine(DNS)
+
+    create_tables(engine)
+
+
+
 
     Session = sessionmaker(bind=engine)
     session = Session()
@@ -23,7 +26,8 @@ if __name__ == '__main__':
 
     id_name = input('Введите Имя или id искомого автора: ')
 
-    print(find_sales(session, id_name))
+
+    get_shops(session, id_name)
 
     session.close()
 

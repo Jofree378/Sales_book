@@ -114,37 +114,51 @@ class Creator:
 
     @staticmethod
     def create_sale(session, price, date_sale, count, id_stock):
-        stock_count = session.query(Stock).filter(Stock.id == id_stock).all()[0].count
-        if stock_count - count >= 0:
-            session.add(Sale(price=price, date_sale=date_sale, count=count, id_stock=id_stock))
-            session.commit()
-        # else:
-        #     print(f'Not enough books in this shop {count}')
+        session.add(Sale(price=price, date_sale=date_sale, count=count, id_stock=id_stock))
+        session.commit()
 
 
-def find_sales(session, id_name='%'):
-    book_list = []
-    stock_id_list = []
-    result = ''
+# def find_sales(session, id_name='%'):
+#     book_list = []
+#     stock_id_list = []
+#     result = ''
+#
+#     if id_name.isdigit():
+#         id_ = id_name
+#         name = ''
+#     else:
+#         id_ = 0
+#         name = id_name
+#
+#     for c in session.query(Book).join(Publisher.books).filter(or_(Publisher.id == id_, Publisher.name == name)).all():
+#         book_list.append(c.id)
+#
+#     for c in session.query(Stock).filter(Stock.id_book.in_(book_list)).all():
+#         stock_id_list.append(c.id)
+#
+#     for c in session.query(Book.title,
+#                            Shop.name,
+#                            Sale.price,
+#                            Sale.date_sale
+#                            ).join(Stock.sales).join(Stock.books).join(Stock.shops).filter(Stock.id.in_(stock_id_list)).all():
+#         result += "{:<40} | {:^10} | {:^7} | {:%d-%m-%Y}".format(c.title, c.name, c.price, c.date_sale) + '\n'
+#
+#     return result
 
+def get_shops(session, id_name):
+    base = session.query(
+        Book.title,
+        Shop.name,
+        Sale.price,
+        Sale.date_sale
+    ).select_from(Shop)\
+        .join(Stock)\
+        .join(Book)\
+        .join(Publisher)\
+        .join(Sale)
     if id_name.isdigit():
-        id_ = id_name
-        name = ''
+        base_new = base.filter(Publisher.id == id_name).all()
     else:
-        id_ = 0
-        name = id_name
-
-    for c in session.query(Book).join(Publisher.books).filter(or_(Publisher.id == id_, Publisher.name == name)).all():
-        book_list.append(c.id)
-
-    for c in session.query(Stock).filter(Stock.id_book.in_(book_list)).all():
-        stock_id_list.append(c.id)
-
-    for c in session.query(Book.title,
-                           Shop.name,
-                           Sale.price,
-                           Sale.date_sale
-                           ).join(Stock.sales).join(Stock.books).join(Stock.shops).filter(Stock.id.in_(stock_id_list)).all():
-        result += "{:^20} | {:^10} | {:^7} | {:%d-%m-%Y}".format(c.title, c.name, c.price, c.date_sale) + '\n'
-
-    return result
+        base_new = base.filter(Publisher.name == id_name).all()
+    for title, name, price, date_sale in base_new:
+        print(f"{title: <40} | {name: ^10} | {price: ^8} | {date_sale.strftime('%d-%m-%Y')}")
